@@ -1,5 +1,8 @@
 # Reads with a chosen ACT->RD gap (tRCD), to find where the chip stops returning stored data.
-from rowbit.program import SLOTS, Command
+from rowbit.program import PROGRAM_DEPTH, SLOTS, Command
+
+COMMANDS_PER_BURST = 3  # ACT, RD or WR, PRE
+BURSTS_PER_PROGRAM = (PROGRAM_DEPTH - 1) // COMMANDS_PER_BURST  # one instruction per command at most, plus PREA
 
 
 def write_bursts(sequencer, locations, entries):

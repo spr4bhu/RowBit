@@ -8,16 +8,21 @@ COPIES_PER_PROGRAM = (PROGRAM_DEPTH - 1) // COMMANDS_PER_COPY  # one instruction
 
 def copy_row(sequencer, bank, source, destination):
     """Copies row `source` onto row `destination` of `bank`; both must be in the same subarray."""
-    init_rows(sequencer, bank, source, [destination])
+    copy_rows(sequencer, bank, [(source, destination)])
 
 
 def init_rows(sequencer, bank, pattern_row, rows):
     """Copies `pattern_row` onto every row in `rows` of `bank`; all must be in its subarray."""
-    rows = list(rows)
-    for start in range(0, len(rows), COPIES_PER_PROGRAM):
+    copy_rows(sequencer, bank, [(pattern_row, row) for row in rows])
+
+
+def copy_rows(sequencer, bank, pairs):
+    """Runs the (source, destination) copies of `bank` in order, in as few programs as fit."""
+    pairs = list(pairs)
+    for start in range(0, len(pairs), COPIES_PER_PROGRAM):
         program = sequencer.program()
-        for row in rows[start:start + COPIES_PER_PROGRAM]:
-            add_copy(program, sequencer.dram, bank, pattern_row, row)
+        for source, destination in pairs[start:start + COPIES_PER_PROGRAM]:
+            add_copy(program, sequencer.dram, bank, source, destination)
         sequencer.run(program.instructions())
 
 
