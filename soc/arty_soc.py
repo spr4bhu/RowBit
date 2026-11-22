@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-# Arty A7-35T SoC: LiteDRAM DDR3, VexRiscv BIOS (calibrates DRAM at boot), UARTBone for the host.
+# Arty A7-35T SoC: LiteDRAM DDR3, VexRiscv BIOS (calibrates DRAM at boot), UARTBone for the host, DRAM sequencer.
 import argparse
 import os
 
 from litex.soc.integration.builder import Builder
 from litex_boards.targets.digilent_arty import BaseSoC
+
+from sequencer import add_sequencer
 
 SYS_CLK_FREQ = 75e6  # 100 MHz doesn't meet timing with openXC7
 
@@ -16,8 +18,10 @@ def build_soc():
         cpu_type="vexriscv",
         uart_name="crossover+uartbone",
         integrated_rom_size=0x20000,  # LiteX's default size, holds the BIOS
+        l2_size=0,  # no write-back cache in front of DRAM, so the bus sees what the sequencer wrote
     )
     soc.platform.device = os.environ["ROWBIT_PART"]
+    add_sequencer(soc)
     return soc
 
 
