@@ -4,9 +4,10 @@ import cocotb
 from cocotb.triggers import NextTimeStep, ReadOnly, RisingEdge
 
 from rowbit.program import Command, encode_instruction
+from rowbit.sequencer import LANES
 from sequencer_bench import READ_DATA, REGISTERS, Bench, bus_address, run_simulation
 
-READ_LATENCY = 8  # sys cycles, as LiteDRAM's A7 PHY at CL6
+READ_LATENCY = 8  # sys cycles; any PHY-like value below DRAIN_CYCLES
 
 
 async def phy(dut, bursts):
@@ -48,7 +49,7 @@ async def stores_only_bursts_answering_its_own_reads(dut):
 
     assert await bench.read(bus_address(REGISTERS, 0, 2)) == len(bursts)
     for index, burst in enumerate(bursts):
-        words = [await bench.read(bus_address(READ_DATA, index, lane)) for lane in range(4)]
+        words = [await bench.read(bus_address(READ_DATA, index, lane)) for lane in range(LANES)]
         assert sum(word << (32 * lane) for lane, word in enumerate(words)) == burst
 
 

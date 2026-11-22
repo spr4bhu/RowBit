@@ -5,9 +5,9 @@ WORDS_PER_INSTRUCTION = 4
 BANKS = 8
 ADDRESS_BITS = 14
 PROGRAM_DEPTH = 1024
-WRITE_DEPTH = 512  # reads need no limit: one per instruction, and the read RAM holds 2048
+WRITE_DEPTH = 512
+READ_DEPTH = 2048  # over PROGRAM_DEPTH, so reads need no limit: at most one per instruction
 PRECHARGE_ALL = 1 << 10  # A10 on PRE
-CLOSE_DELAY = 16  # tCK from the last command to the closing PREA; covers WR->PRE (tWR) at DDR3-600
 
 
 class Command(IntEnum):
@@ -46,12 +46,15 @@ def has_command(instruction, command):
 class Program:
     """DDR3 commands on a DRAM-clock timeline, packed into sequencer instructions."""
 
-    def __init__(self, read_phase, write_phase):
+    def __init__(self, read_phase, write_phase, close_delay):
+        """close_delay: tCK from the last command to the closing PREA; must cover WR->PRE and tRAS."""
         self.data_phase = {Command.RD: read_phase, Command.WR: write_phase}
+        self.close_delay = close_delay
         self.time = 0  # tCK of the next command
         self.commands = {}
 
     def wait(self, tck):
+        """Adds tck after the last command's own tCK: wait(n - 1) puts the next command n tCK after it."""
         if tck < 0:
             raise ValueError(f"wait {tck} is negative")
         self.time += tck
@@ -67,7 +70,7 @@ class Program:
     def instructions(self):
         """The program as sequencer instructions, closed by a PREA so the controller gets idle banks back."""
         commands = dict(self.commands)
-        commands[self.time - 1 + CLOSE_DELAY] = (Command.PRE, 0, PRECHARGE_ALL)
+        commands[self.time - 1 + self.close_delay] = (Command.PRE, 0, PRECHARGE_ALL)
         cycles = sorted({time // SLOTS for time in commands})
         bundles = [[commands.get(cycle * SLOTS + slot, (Command.NOP,)) for slot in range(SLOTS)]
                    for cycle in cycles]

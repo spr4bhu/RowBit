@@ -12,8 +12,14 @@ SYS_CLK_FREQ = 75e6  # 100 MHz doesn't meet timing with openXC7
 UART_BAUDRATE = 1_000_000  # exact on the FT2232H (12 MHz / 12)
 
 
+class ArtySoC(BaseSoC):
+    def add_sdram(self, *args, module=None, **kwargs):
+        self.dram_module = module  # the chip litex-boards chose, so its timings can be exported
+        super().add_sdram(*args, module=module, **kwargs)
+
+
 def build_soc():
-    soc = BaseSoC(
+    soc = ArtySoC(
         toolchain="openxc7",
         sys_clk_freq=SYS_CLK_FREQ,
         cpu_type="vexriscv",

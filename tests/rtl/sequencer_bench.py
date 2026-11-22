@@ -5,19 +5,25 @@ from cocotb.clock import Clock
 from cocotb.triggers import ReadOnly, RisingEdge
 from cocotb_tools.runner import get_runner, get_results
 
-from rowbit.program import WORDS_PER_INSTRUCTION, Command
+from rowbit.program import (ADDRESS_BITS, BANKS, PROGRAM_DEPTH, READ_DEPTH, SLOTS, WORDS_PER_INSTRUCTION, WRITE_DEPTH,
+                            Command)
+from rowbit.sequencer import LANES, REGION_SHIFT
 
 ROOT = os.environ["ROWBIT_ROOT"]
 RTL = [os.path.join(ROOT, "rtl", name) for name in ("dram_sequencer.v", "simple_dual_port_ram.v")]
 PINS_TO_COMMAND = {0b0011: "ACT", 0b0010: "PRE", 0b0101: "RD", 0b0100: "WR", 0b0001: "REF", 0b0110: "ZQCS"}
 REGISTERS, PROGRAM, WRITE_DATA, READ_DATA = range(4)
+BANK_BITS = (BANKS - 1).bit_length()
+# The host's sizes, as the SoC passes them; tests may override others (e.g. WRITE_LATENCY).
+SHARED_PARAMETERS = {"ADDRESS_BITS": ADDRESS_BITS, "BANK_BITS": BANK_BITS, "PROGRAM_DEPTH": PROGRAM_DEPTH,
+                     "WRITE_DEPTH": WRITE_DEPTH, "READ_DEPTH": READ_DEPTH}
 
 
 def run_simulation(test_file, parameters=None):
     """Builds the sequencer with Icarus and runs the cocotb tests in `test_file`; fails on any failed test."""
-    parameters = parameters or {}
     name = os.path.splitext(os.path.basename(test_file))[0]
-    suffix = "".join(f"_{key}{value}" for key, value in sorted(parameters.items()))
+    suffix = "".join(f"_{key}{value}" for key, value in sorted((parameters or {}).items()))
+    parameters = {**SHARED_PARAMETERS, **(parameters or {})}
     build_dir = os.path.join(ROOT, "build", "rtl-sim", name + suffix)
     runner = get_runner("icarus")
     runner.build(sources=RTL, hdl_toplevel="dram_sequencer", parameters=parameters, build_dir=build_dir,
@@ -29,7 +35,7 @@ def run_simulation(test_file, parameters=None):
 
 
 def bus_address(region, entry=0, lane=0):
-    return (region << 14) | (entry << 2) | lane
+    return (region << REGION_SHIFT) | (entry << 2) | lane
 
 
 class Bench:
@@ -95,7 +101,7 @@ class Bench:
             for lane in range(WORDS_PER_INSTRUCTION):
                 await self.write(bus_address(PROGRAM, index, lane), words[lane])
         for index, entry in enumerate(write_entries):
-            for lane in range(4):
+            for lane in range(LANES):
                 await self.write(bus_address(WRITE_DATA, index, lane), entry >> (32 * lane) & 0xFFFFFFFF)
         await self.write(bus_address(REGISTERS, 0, 1), len(instructions))
 
@@ -126,14 +132,15 @@ class Bench:
             cs_n, ras_n, cas_n, we_n, bank, address = (value_of(signal) for signal in (
                 dut.dfi_cs_n, dut.dfi_ras_n, dut.dfi_cas_n, dut.dfi_we_n, dut.dfi_bank, dut.dfi_address))
             slots = []
-            for slot in range(4):
+            for slot in range(SLOTS):
                 if None in (cs_n, ras_n, cas_n, we_n, bank, address):
                     slots.append(("X", None, None))
                     continue
                 pins = ((cs_n >> slot & 1) << 3 | (ras_n >> slot & 1) << 2 |
                         (cas_n >> slot & 1) << 1 | (we_n >> slot & 1))
                 command = PINS_TO_COMMAND.get(pins)
-                slots.append((command, bank >> (3 * slot) & 0b111, address >> (14 * slot) & 0x3FFF)
+                slots.append((command, bank >> (BANK_BITS * slot) & BANKS - 1,
+                              address >> (ADDRESS_BITS * slot) & 2**ADDRESS_BITS - 1)
                              if command else None)
             self.dfi_log.append({
                 "cycle": self.cycle,

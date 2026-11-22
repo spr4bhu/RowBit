@@ -2,13 +2,15 @@
 from rowbit.program import encode_instruction
 
 ALL_ONES = 0xFFFFFFFF
-REGION_OFFSET = 64 * 2**20
 
 
 def retention_flips(sequencer, seconds, size):
-    """Writes `size` bytes of ones, keeps refresh off for `seconds`, returns how many bits flipped."""
+    """Writes `size` bytes of ones in the middle of DRAM, keeps refresh off for `seconds`, returns flipped bits."""
     bus = sequencer.bus
-    region = bus.mems.main_ram.base + REGION_OFFSET
+    main_ram = bus.mems.main_ram
+    if size > main_ram.size // 2:
+        raise ValueError(f"{size} bytes is over half of DRAM")
+    region = main_ram.base + main_ram.size // 2
     bus.write(region, [ALL_ONES] * (size // 4))
     cycles = round(seconds * bus.constants.config_clock_frequency)
     sequencer.run([encode_instruction([], wait=cycles)], timeout=seconds + 10)

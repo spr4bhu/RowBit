@@ -1,11 +1,13 @@
 import time
 
-from rowbit.program import Command, has_command
+from rowbit.dram import DRAM
+from rowbit.program import Command, Program, has_command
 
 REGISTERS, PROGRAM, WRITE_DATA, READ_DATA = range(4)
 CONTROL, LENGTH, READ_COUNT, WRITE_COUNT = range(4)
 BUSY = 0b01
 LANES = 4  # 32-bit words per 128-bit data entry
+REGION_SHIFT = 14  # word-address bit where the region starts (wb_adr[15:14] in rtl/dram_sequencer.v)
 
 
 class Sequencer:
@@ -16,9 +18,15 @@ class Sequencer:
         self.base = bus.mems.sequencer.base
         self.read_phase = bus.regs.ddrphy_rdphase.read()
         self.write_phase = bus.regs.ddrphy_wrphase.read()
+        self.dram = DRAM(bus.constants)
+
+    def program(self):
+        """An empty program for this board's PHY phases, closed legally after any last command."""
+        close_delay = max(self.dram.write_to_precharge, self.dram.activate_to_precharge)
+        return Program(self.read_phase, self.write_phase, close_delay)
 
     def address(self, region, word=0):
-        return self.base + 4 * ((region << 14) + word)
+        return self.base + 4 * ((region << REGION_SHIFT) + word)
 
     def busy(self):
         return bool(self.bus.read(self.address(REGISTERS, CONTROL)) & BUSY)
