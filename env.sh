@@ -1,6 +1,7 @@
 # Usage: source env.sh  (works from bash and zsh)
 export ROWBIT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]:-${(%):-%x}}")" && pwd)"
 . "$ROWBIT_ROOT/scripts/toolchain-versions.sh"
+export ROWBIT_PART
 
 export NEXTPNR_XILINX_DIR="$ROWBIT_TOOLS_DIR/nextpnr-xilinx"
 export PRJXRAY_DB_DIR="$NEXTPNR_XILINX_DIR/xilinx/external/prjxray-db"

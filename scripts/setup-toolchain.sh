@@ -44,3 +44,4 @@ fi
 
 [ -d "$repo_dir/.venv" ] || "python$PYTHON_VERSION" -m venv "$repo_dir/.venv"
 "$repo_dir/.venv/bin/pip" install -q -r "$repo_dir/requirements.txt"
+"$repo_dir/.venv/bin/pip" install -q -e "$repo_dir"
