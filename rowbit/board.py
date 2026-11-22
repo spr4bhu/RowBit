@@ -10,6 +10,7 @@ ROOT = os.environ["ROWBIT_ROOT"]
 BITSTREAM = os.path.join(ROOT, "build", "soc", "gateware", "digilent_arty.bit")
 CSR_CSV = os.path.join(ROOT, "build", "soc", "csr.csv")
 SERVER_PORT = 1234
+BUS_TIMEOUT = 30  # seconds; a read is answered only after every queued write has crossed the UART
 ANSI_COLOUR = re.compile(r"\x1b\[[0-9;]*m")
 
 
@@ -33,8 +34,7 @@ class Board:
             ["litex_server", "--uart", "--uart-port", self.uart, "--bind-port", str(SERVER_PORT)],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         wait_for_port(SERVER_PORT)
-        self.bus = RemoteClient(port=SERVER_PORT, csr_csv=CSR_CSV)
-        self.bus.open()
+        self.bus = open_bus(SERVER_PORT)
 
     def close(self):
         if self.bus:
@@ -63,6 +63,13 @@ class Board:
             text += "".join(chr(c) for c in chars)
             text = ANSI_COLOUR.sub("", text)
         return text
+
+
+def open_bus(port, csr_csv=CSR_CSV, timeout=BUS_TIMEOUT):
+    # RemoteClient returns zeros on a timeout unless told to raise.
+    bus = RemoteClient(port=port, csr_csv=csr_csv, timeout=timeout, raise_on_timeout=True)
+    bus.open()
+    return bus
 
 
 def port_is_open(port):
