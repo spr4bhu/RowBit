@@ -1,0 +1,5 @@
+#!/bin/sh
+# Nix's fasm2frames can't import prjxray; run it with the venv python instead.
+nix_fasm2frames="$(readlink -f "$HOME/.nix-profile/bin/fasm2frames")"
+prjxray_python_dir="$(dirname "$(dirname "$nix_fasm2frames")")/usr/share/python3"
+exec env PYTHONPATH="$prjxray_python_dir" python3 "$nix_fasm2frames" "$@"

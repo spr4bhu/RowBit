@@ -1,0 +1,17 @@
+# Local outputs
+/build/
+/results/
+
+# Python
+/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# Simulation
+sim_build/
+*.vcd
+*.fst
+results.xml
+*.result.xml

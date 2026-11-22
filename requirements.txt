@@ -1,0 +1,18 @@
+migen @ git+https://github.com/m-labs/migen@e19524c963a8342952840983047557707fbe0b6a
+litex @ git+https://github.com/enjoy-digital/litex@afed66238638fac1d1e13c3edd6568cdccea5356
+litedram @ git+https://github.com/enjoy-digital/litedram@d8cfd4c479a8c304f4a9b048d017e6a7b44a190a
+liteeth @ git+https://github.com/enjoy-digital/liteeth@a54c730c323f271e5b5a33d48df54f6ce2d58c0a
+litex-boards @ git+https://github.com/litex-hub/litex-boards@2ccda1274d9a00088af3407bc93f0c7dd4892981
+pythondata-cpu-vexriscv @ git+https://github.com/litex-hub/pythondata-cpu-vexriscv@642ecfed1c84460555d6d803d660cc60cfc1ecb6
+pythondata-software-picolibc @ git+https://github.com/litex-hub/pythondata-software-picolibc@6a13ccce7c575b32c102dd9dc52178505b81fe39
+pythondata-software-compiler_rt @ git+https://github.com/litex-hub/pythondata-software-compiler_rt@6eb76609c9627bf26635e57c63fb22cda7115887
+liteiclink==2025.4
+meson==1.12.1
+pyserial==3.5
+fasm==0.0.2.post88
+intervaltree==3.2.1
+simplejson==4.3.0
+PyYAML==6.0.4
+numpy==2.5.5
+pytest==9.2.0
+cocotb==2.1.0

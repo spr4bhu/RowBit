@@ -1,0 +1,23 @@
+# Pinned toolchain
+
+BREW_PACKAGES="yosys openfpgaloader riscv64-elf-gcc icarus-verilog verilator python@3.14"
+YOSYS_VERSION="0.71+post"
+OPENFPGALOADER_VERSION="1.2.0"
+RISCV_GCC_VERSION="16.2.0"
+ICARUS_VERSION="13.0"
+VERILATOR_VERSION="5.054"
+PYTHON_VERSION="3.14"
+
+PRJXRAY_FLAKE="github:openxc7/toolchain-nix/68a64b2137d6229599ae149f43c8dfa43235cd26#prjxray"
+PRJXRAY_VERSION="0.9.2"
+
+NEXTPNR_XILINX_REPO="https://github.com/openXC7/nextpnr-xilinx.git"
+NEXTPNR_XILINX_COMMIT="bc9b234634cf80756b04ad4ea5f8e7a83293c425"
+PRJXRAY_DB_COMMIT="a90f27c1caefee5276f47440f4c730b50519a86f"
+NEXTPNR_XILINX_META_COMMIT="a4af910cac907f2cbd3a545f26f8e26573e860de"
+
+ROWBIT_TOOLS_DIR="${ROWBIT_TOOLS_DIR:-$HOME/opt/openxc7}"
+
+# Arty's xc7a35ticsg324-1L is the same die
+ROWBIT_PART="xc7a35tcsg324-1"
+ROWBIT_CHIPDB_NAME="xc7a35tcsg324"
