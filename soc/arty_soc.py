@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Arty A7-35T SoC: LiteDRAM DDR3, VexRiscv BIOS (calibrates DRAM at boot), UARTBone for the host, DRAM sequencer.
+# Writes the netlist sources and constraints; scripts/build-soc.sh runs synthesis, place and route.
 import argparse
 import os
 
@@ -23,7 +24,7 @@ def build_soc():
         toolchain="openxc7",
         sys_clk_freq=SYS_CLK_FREQ,
         cpu_type="vexriscv",
-        cpu_variant="lite",  # the standard variant misses 75 MHz with openXC7
+        cpu_variant="lite",  # only runs the BIOS DRAM calibration
         uart_name="crossover+uartbone",
         uart_baudrate=UART_BAUDRATE,
         integrated_rom_size=0x20000,  # LiteX's default size, holds the BIOS
@@ -39,7 +40,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", default=os.path.join(os.environ["ROWBIT_ROOT"], "build", "soc"))
     args = parser.parse_args()
-    Builder(build_soc(), output_dir=args.output_dir, csr_csv=os.path.join(args.output_dir, "csr.csv")).build()
+    Builder(build_soc(), output_dir=args.output_dir, csr_csv=os.path.join(args.output_dir, "csr.csv")).build(run=False)
 
 
 if __name__ == "__main__":
