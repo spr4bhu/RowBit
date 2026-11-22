@@ -30,8 +30,10 @@ class Board:
         # Our server would fail to bind and exit silently, leaving us talking to the other one.
         if port_is_open(SERVER_PORT):
             raise RuntimeError(f"port {SERVER_PORT} already in use (a litex_server left running?)")
+        baudrate = RemoteClient(csr_csv=CSR_CSV).constants.uart_baudrate
         self.server = subprocess.Popen(
-            ["litex_server", "--uart", "--uart-port", self.uart, "--bind-port", str(SERVER_PORT)],
+            ["litex_server", "--uart", "--uart-port", self.uart, "--uart-baudrate", str(baudrate),
+             "--bind-port", str(SERVER_PORT)],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         wait_for_port(SERVER_PORT)
         self.bus = open_bus(SERVER_PORT)

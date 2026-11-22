@@ -9,6 +9,7 @@ from litex_boards.targets.digilent_arty import BaseSoC
 from sequencer import add_sequencer
 
 SYS_CLK_FREQ = 75e6  # 100 MHz doesn't meet timing with openXC7
+UART_BAUDRATE = 1_000_000  # exact on the FT2232H (12 MHz / 12)
 
 
 def build_soc():
@@ -16,11 +17,14 @@ def build_soc():
         toolchain="openxc7",
         sys_clk_freq=SYS_CLK_FREQ,
         cpu_type="vexriscv",
+        cpu_variant="lite",  # the standard variant misses 75 MHz with openXC7
         uart_name="crossover+uartbone",
+        uart_baudrate=UART_BAUDRATE,
         integrated_rom_size=0x20000,  # LiteX's default size, holds the BIOS
         l2_size=0,  # no write-back cache in front of DRAM, so the bus sees what the sequencer wrote
     )
     soc.platform.device = os.environ["ROWBIT_PART"]
+    soc.add_constant("UART_BAUDRATE", UART_BAUDRATE)  # the host reads it from csr.csv
     add_sequencer(soc)
     return soc
 
