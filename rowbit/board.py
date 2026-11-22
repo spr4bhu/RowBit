@@ -26,6 +26,9 @@ class Board:
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     def connect(self):
+        # Our server would fail to bind and exit silently, leaving us talking to the other one.
+        if port_is_open(SERVER_PORT):
+            raise RuntimeError(f"port {SERVER_PORT} already in use (a litex_server left running?)")
         self.server = subprocess.Popen(
             ["litex_server", "--uart", "--uart-port", self.uart, "--bind-port", str(SERVER_PORT)],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -62,12 +65,17 @@ class Board:
         return text
 
 
+def port_is_open(port):
+    try:
+        socket.create_connection(("localhost", port), timeout=0.2).close()
+        return True
+    except OSError:
+        return False
+
+
 def wait_for_port(port, timeout=10):
     deadline = time.time() + timeout
-    while time.time() < deadline:
-        try:
-            socket.create_connection(("localhost", port), timeout=0.2).close()
-            return
-        except OSError:
-            time.sleep(0.1)
-    raise TimeoutError(f"litex_server did not open port {port}")
+    while not port_is_open(port):
+        if time.time() > deadline:
+            raise TimeoutError(f"litex_server did not open port {port}")
+        time.sleep(0.1)
