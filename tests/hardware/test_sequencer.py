@@ -20,13 +20,6 @@ def words_of(entry):
     return [entry >> (32 * lane) & 0xFFFFFFFF for lane in range(LANES)]
 
 
-def controller_address(board, dram, bank, row, column):
-    """Where the controller's ROW_BANK_COL mapping puts this burst on the bus (one 4-lane entry per burst)."""
-    burst_bits = dram.column_bits - (dram.burst_length - 1).bit_length()
-    burst = row << (dram.bank_bits + burst_bits) | bank << burst_bits | column // dram.burst_length
-    return board.bus.mems.main_ram.base + 4 * LANES * burst
-
-
 def read_at_spec(sequencer, locations):
     return read_bursts(sequencer, locations, sequencer.dram.activate_to_read)
 
@@ -50,14 +43,14 @@ def test_sequencer_writes_are_seen_by_controller(board, sequencer):
     seed, locations, data = random_locations(sequencer)
     write_bursts(sequencer, locations, data)
     for location, expected in zip(locations, data):
-        words = board.bus.read(controller_address(board, sequencer.dram, *location), length=LANES)
+        words = board.bus.read(sequencer.controller_address(*location), length=LANES)
         assert words == words_of(expected), f"seed {seed}, location {location}"
 
 
 def test_sequencer_reads_what_controller_wrote(board, sequencer):
     seed, locations, data = random_locations(sequencer)
     for location, entry in zip(locations, data):
-        board.bus.write(controller_address(board, sequencer.dram, *location), words_of(entry))
+        board.bus.write(sequencer.controller_address(*location), words_of(entry))
     assert read_at_spec(sequencer, locations) == data, f"seed {seed}"
 
 
@@ -90,7 +83,7 @@ def test_back_to_back_bursts_keep_their_own_data(board, sequencer):
     bank, row, _ = locations[0]
     burst_train(sequencer, bank, row, Command.WR, data)
     columns = [sequencer.dram.burst_length * burst for burst in range(len(data))]
-    written = [board.bus.read(controller_address(board, sequencer.dram, bank, row, column), length=LANES)
+    written = [board.bus.read(sequencer.controller_address(bank, row, column), length=LANES)
                for column in columns]
     assert written == [words_of(entry) for entry in data], f"seed {seed}"
     assert burst_train(sequencer, bank, row, Command.RD) == data, f"seed {seed}"

@@ -25,6 +25,13 @@ class Sequencer:
         close_delay = max(self.dram.write_to_precharge, self.dram.activate_to_precharge)
         return Program(self.read_phase, self.write_phase, close_delay)
 
+    def controller_address(self, bank, row, column=0):
+        """Where the controller's ROW_BANK_COL mapping puts this burst on the bus (one entry per burst)."""
+        dram = self.dram
+        burst_bits = dram.column_bits - (dram.burst_length - 1).bit_length()
+        burst = row << (dram.bank_bits + burst_bits) | bank << burst_bits | column // dram.burst_length
+        return self.bus.mems.main_ram.base + 4 * LANES * burst
+
     def address(self, region, word=0):
         return self.base + 4 * ((region << REGION_SHIFT) + word)
 
