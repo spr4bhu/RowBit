@@ -9,7 +9,7 @@ from litex_boards.targets.digilent_arty import BaseSoC
 
 from sequencer import add_sequencer
 
-SYS_CLK_FREQ = 87.5e6  # tCK 2.86 ns: 2 tCK PRE->ACT lands in the RowClone window; 75 MHz steps miss it
+SYS_CLK_FREQ = 87.5e6  # 2 tCK PRE->ACT = 5.71 ns, inside the RowClone window; 75 and 100 MHz steps both miss it
 UART_BAUDRATE = 1_000_000  # exact on the FT2232H (12 MHz / 12)
 
 
