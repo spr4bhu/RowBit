@@ -5,6 +5,11 @@ repo_dir="$(cd "$(dirname "$0")/.." && pwd)"
 . "$repo_dir/scripts/toolchain-versions.sh"
 nextpnr_dir="$ROWBIT_TOOLS_DIR/nextpnr-xilinx"
 
+fail() { echo "error: $1" >&2; exit 1; }
+[ "$(uname -s)-$(uname -m)" = Darwin-arm64 ] || fail "only Apple Silicon macOS is supported for now"
+command -v brew >/dev/null || fail "Homebrew not found. Install it from https://brew.sh and re-run."
+command -v nix >/dev/null || fail "Nix not found. Install it from https://determinate.systems/nix-installer and re-run."
+
 checkout_submodule() {
   local name="$1" commit="$2"
   git -C "$nextpnr_dir" submodule update --init --depth 1 "xilinx/external/$name"
