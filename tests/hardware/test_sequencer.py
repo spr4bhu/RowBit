@@ -3,17 +3,11 @@ import random
 import pytest
 
 from rowbit.program import Command, Program, encode_instruction
-from rowbit.sequencer import Sequencer
 
 pytestmark = pytest.mark.hardware
 
 # Legal DDR3-600 spacing in tCK (3.33 ns): tRCD 5, WR->PRE 14, RD->PRE 4, tRAS 11, tRP 5.
 AFTER_ACT, AFTER_WRITE, AFTER_READ, AFTER_PRE = 8, 20, 12, 8
-
-
-@pytest.fixture(scope="module")
-def sequencer(board):
-    return Sequencer(board.bus)
 
 
 def random_locations(count=16):

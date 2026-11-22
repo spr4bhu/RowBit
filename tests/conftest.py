@@ -3,6 +3,7 @@ import os
 import pytest
 
 from rowbit import Board
+from rowbit.sequencer import Sequencer
 
 
 @pytest.fixture(scope="session")
@@ -16,3 +17,8 @@ def board():
     board.boot_log = board.read_console("litex> ")
     yield board
     board.close()
+
+
+@pytest.fixture(scope="session")
+def sequencer(board):
+    return Sequencer(board.bus)
