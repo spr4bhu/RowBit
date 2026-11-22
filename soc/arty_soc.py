@@ -9,7 +9,7 @@ from litex_boards.targets.digilent_arty import BaseSoC
 
 from sequencer import add_sequencer
 
-SYS_CLK_FREQ = 75e6  # 100 MHz doesn't meet timing with openXC7
+SYS_CLK_FREQ = 87.5e6  # tCK 2.86 ns: 2 tCK PRE->ACT lands in the RowClone window; 75 MHz steps miss it
 UART_BAUDRATE = 1_000_000  # exact on the FT2232H (12 MHz / 12)
 
 
