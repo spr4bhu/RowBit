@@ -5,6 +5,7 @@ import subprocess
 import time
 
 from litex import RemoteClient
+from serial.tools import list_ports
 
 ROOT = os.environ["ROWBIT_ROOT"]
 BITSTREAM = os.path.join(ROOT, "build", "soc", "gateware", "digilent_arty.bit")
@@ -21,6 +22,14 @@ class Board:
         self.uart = uart or os.environ["ARTY_UART"]
         self.server = None
         self.bus = None
+
+    @property
+    def serial(self):
+        """The USB serial number of the board's FTDI chip: names this board's measured files."""
+        port = next((port for port in list_ports.comports() if port.device == self.uart), None)
+        if port is None or not port.serial_number:
+            raise RuntimeError(f"no USB serial number for {self.uart}")
+        return port.serial_number
 
     def program(self, bitstream=BITSTREAM):
         subprocess.run(["openFPGALoader", "-b", "arty_a7_35t", bitstream], check=True,
